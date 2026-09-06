@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>月球潮汐实验室</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./vendor/lucide.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.module.min.js",
+          "three/addons/": "./vendor/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-text">
+            <strong>月球潮汐实验室</strong>
+            <span>地月系统自由探索</span>
+          </div>
+        </div>
+
+        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="视图">
+          <button class="seg-btn active" data-mode="3d" role="tab" aria-selected="true">
+            <i data-icon="Globe"></i><span>3D</span>
+          </button>
+          <button class="seg-btn" data-mode="top" role="tab" aria-selected="false">
+            <i data-icon="Orbit"></i><span>俯视</span>
+          </button>
+        </div>
+
+        <div class="top-actions">
+          <button id="playToggle" class="icon-btn" type="button" aria-label="播放或暂停">
+            <i data-icon="Pause"></i>
+          </button>
+          <button id="resetBtn" class="icon-btn" type="button" aria-label="重置">
+            <i data-icon="RotateCcw"></i>
+          </button>
+          <button id="panelToggle" class="icon-btn panel-toggle" type="button" aria-label="控制面板">
+            <i data-icon="Settings2"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="stage" id="stage">
+        <div class="view view-3d active" id="view3d">
+          <div class="scene-labels" id="sceneLabels" aria-hidden="true">
+            <div class="scene-tag tag-moon" data-tag="moon">月球</div>
+            <div class="scene-tag tag-earth" data-tag="earth">地球</div>
+            <div class="scene-tag tag-near" data-tag="near">向月高潮</div>
+            <div class="scene-tag tag-far" data-tag="far">背月高潮</div>
+          </div>
+        </div>
+        <div class="view view-top" id="viewTop">
+          <canvas id="topCanvas"></canvas>
+        </div>
+
+        <div class="sciencebar" id="sciencebar">
+          <span class="science-item">
+            <i class="swatch swatch-near"></i>
+            <span>向月潮</span>
+            <strong id="nearTide">+1.0</strong>
+          </span>
+          <span class="science-item">
+            <i class="swatch swatch-far"></i>
+            <span>背月潮</span>
+            <strong id="farTide">+1.0</strong>
+          </span>
+          <span class="science-item">
+            <i class="swatch swatch-low"></i>
+            <span>低潮环</span>
+            <strong id="lowTide">-0.5</strong>
+          </span>
+          <span class="science-item">
+            <i class="swatch swatch-earth"></i>
+            <span>地球自转</span>
+            <strong id="earthReadout">0°</strong>
+          </span>
+          <span class="science-item science-wide">
+            <i class="swatch swatch-moon"></i>
+            <span>月球方位</span>
+            <strong id="moonReadout">0°</strong>
+          </span>
+        </div>
+      </main>
+
+      <aside class="panel" id="controlPanel">
+        <section class="control-group">
+          <h2 class="group-title">时间与运动</h2>
+          <div class="field">
+            <div class="field-head">
+              <span>模拟速度</span>
+              <output id="speedOutput">1.0x</output>
+            </div>
+            <input id="speedRange" type="range" min="0.1" max="4" step="0.1" value="1" />
+          </div>
+          <div class="check-row">
+            <label>
+              <input id="earthSpinToggle" type="checkbox" checked />
+              <span>地球自转</span>
+            </label>
+            <label>
+              <input id="moonOrbitToggle" type="checkbox" checked />
+              <span>月球公转</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2 class="group-title">月球参数</h2>
+          <div class="field">
+            <div class="field-head">
+              <span>轨道方位</span>
+              <output id="moonAngleOutput">0°</output>
+            </div>
+            <input id="moonAngleRange" type="range" min="0" max="360" step="0.1" value="0" />
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <span>地月距离</span>
+              <output id="moonDistanceOutput">385,000 km</output>
+            </div>
+            <input id="moonDistanceRange" type="range" min="4.2" max="6.5" step="0.01" value="5" />
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2 class="group-title">潮汐与显示</h2>
+          <div class="field">
+            <div class="field-head">
+              <span>隆起幅度</span>
+              <output id="tideStrengthOutput">1.6x</output>
+            </div>
+            <input id="tideStrengthRange" type="range" min="0.15" max="2.5" step="0.05" value="1.6" />
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <span>水波动效</span>
+              <output id="waveStrengthOutput">1.0x</output>
+            </div>
+            <input id="waveStrengthRange" type="range" min="0" max="2" step="0.05" value="1" />
+          </div>
+          <div class="check-row">
+            <label>
+              <input id="showOceanToggle" type="checkbox" checked />
+              <span>水体层</span>
+            </label>
+            <label>
+              <input id="showBulgeToggle" type="checkbox" checked />
+              <span>高潮标记</span>
+            </label>
+            <label>
+              <input id="showLowRingToggle" type="checkbox" checked />
+              <span>低潮环</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="control-group note-group">
+          <div class="note-line"><span class="note-key">近月侧</span>月球引力较强，水面向月球抬升</div>
+          <div class="note-line"><span class="note-key">背月侧</span>地月系统公转的“甩出力”形成第二个高潮</div>
+          <div class="note-line"><span class="note-key">低潮环</span>垂直于地月连线的环带水层较薄</div>
+        </section>
+      </aside>
+    </div>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

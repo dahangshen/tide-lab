@@ -1,0 +1,12 @@
+{
+	"type": "module",
+	"dependencies": {
+		"lucide": "^1.41.0",
+		"three": "^0.185.1"
+	},
+	"scripts": {
+		"start": "node server.mjs",
+		"build:dist": "node scripts/build-dist.mjs",
+		"build:github": "node scripts/build-github-upload.mjs"
+	}
+}
